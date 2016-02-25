@@ -1,1 +1,108 @@
-Hello World
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="index.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Fredericka+the+Great' rel='stylesheet' type='text/css'>
+    <script src="jquery.js"></script>
+    <script src="data_generator.js"></script>
+    <title>Twittler version 0.8</title>
+  </head>
+  <body>
+    <p class="splash">Twittler</p>
+    <div class="tweetBox"></div>
+    <button type="button" class="resetButton">Show LIVE Tweets</button>
+
+    <script>
+      var setIntervalId; // global var for setInterval
+            
+      var makeDateString = function(dateObj) {
+        var localeFormat = dateObj.toLocaleTimeString();  // convert to a String '9:24:14 AM'
+        var dateString = localeFormat.slice(0, localeFormat.lastIndexOf(':')); // Get hour & minutes
+        dateString += localeFormat.slice(localeFormat.length - 2).toLowerCase() + ' '; // Get AM or PM and lowercase it
+      
+        localeFormat = dateObj.toDateString(); // convert to string 'Wed Feb 10 2016'
+        dateString += eval(localeFormat.slice(8, 10)) + ' '; // Get day and remove leading 0 if present
+        dateString += localeFormat.slice(4, 7);  // Get 3 character month description
+        
+        return dateString;
+      };
+      
+      var displayTweet = function(tweetObj, arg) {
+        var buildDiv = "<div id='" + tweetObj.user + "'>" + "<div class='tweetTime'>" + makeDateString(tweetObj.created_at) + (' *' + arg) + "</div>";
+        buildDiv += "<div class='tweetUser'>@" + tweetObj.user + "</div>";
+        buildDiv += "<div class='tweetLine'>" + tweetObj.message + "</div>" + "<hr class='hrRuler'>" + "</div>";
+        $('.tweetBox').prepend(buildDiv);
+      };
+      
+      var turnOffClick = function() {
+        $('.tweetUser').off('click');
+      };
+    
+      var wrapTweetCount = function() {
+        var tweetArrayLen = 0;
+        return function() {
+          turnOffClick();
+          while(tweetArrayLen < streams.home.length) {
+            displayTweet(streams.home[tweetArrayLen], tweetArrayLen);
+            tweetArrayLen++;
+          }
+          $(".tweetUser").on('click', function() { 
+            filterUser($(this).text().slice(1));
+          });
+        };
+      };
+     
+      var filterUser = function(userToFilter) {
+        turnOffClick();
+        stopUpdates();
+        $(".tweetBox").children().not('#' + userToFilter).hide();
+        $(".resetButton").css("display", "inline-block");
+     
+        $(".resetButton").on('click', function() { 
+          $(".resetButton").off("click");
+          $(".resetButton").css("display", "none");
+          $(".tweetBox").children().show();
+          checkForTweets();
+          startUpdates();
+        });
+      };
+      
+      var stopUpdates = function() {
+        clearInterval(setIntervalId);
+      };
+      
+      var startUpdates = function() {
+        setIntervalId = setInterval(checkForTweets, 2000);
+      };
+      
+      var checkForTweets = wrapTweetCount();
+      
+      
+      $(document).ready(function(){
+        
+        checkForTweets();
+        startUpdates();
+      
+        // $('.tweetUser').on('click',function(){alert('ok you clicked')});
+
+        
+        // var $body = $('body');
+        // // $body.html('');
+
+        // var index = streams.home.length - 1;
+        // while(index >= 0){
+        //   var tweet = streams.home[index];
+        //   displayTweet(tweet);
+        //   // var $tweet = $('<div></div>');
+        //   // $tweet.text('@' + tweet.user + ': ' + tweet.message + ' ' + makeDateString(tweet.created_at));
+        //   // // $tweet.appendTo($body);
+        //   // $tweet.appendTo('body');
+        //   index -= 1;
+        //   // console.log(typeof tweet);
+        // }
+
+      });
+
+    </script>
+  </body>
+</html>
